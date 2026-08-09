@@ -1,0 +1,777 @@
+{
+  "name": "Extrato_Automatizado_Print",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "print",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -2032,
+        128
+      ],
+      "id": "56a3fb02-5ab7-42db-98ec-e45ef4de2cd7",
+      "name": "Webhook",
+      "webhookId": "754f170e-f8ec-4edd-a1b0-3d239f88d824"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "Base64",
+        "options": {
+          "fileName": "print.jpeg"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -1584,
+        128
+      ],
+      "id": "0a4dc0da-a04e-4ac3-8521-c350c6aacb16",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8f0682f7-c8c7-4235-822d-76875532b569",
+              "name": "Base64",
+              "value": "={{ $json.body.data.replace(/^data:image\\/[a-zA-Z]+;base64,/, '') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1808,
+        128
+      ],
+      "id": "81e9a3f7-53e9-4d0b-a4e6-9c35c0b6a47b",
+      "name": "Refatorar imagem base64"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "=\n {{ $json.content.parts[0].text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1120,
+        128
+      ],
+      "id": "2e75d1e1-c8b2-4171-8691-29b9c578634a",
+      "name": "Separar Informações"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "=\n {{ $json.content.parts[0].text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        336,
+        0
+      ],
+      "id": "0c36d4b8-d8d5-412e-b220-2df4e56096c7",
+      "name": "Pegar Nome Oficial"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolSerpApi",
+      "typeVersion": 1,
+      "position": [
+        64,
+        224
+      ],
+      "id": "30ca5a3f-b67b-4cdc-b107-691519635a8c",
+      "name": "SerpAPI",
+      "credentials": {
+        "serpApi": {
+          "id": "SUA_CREDENCIAL_SERPAPI_ID",
+          "name": "SerpAPI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "text": "=# PERSONA\nVocê é um sistema especializado em OCR (Reconhecimento Óptico de Caracteres) e análise de documentos bancários brasileiros.\n\n# TAREFA\nAnalise a imagem fornecida e verifique se ela é um comprovante de pagamento (Pix, Transferência, Boleto, etc.).\n\n# REGRAS DE RESPOSTA\n1. Se a imagem NÃO for um comprovante de pagamento:\n   - Retorne apenas: {\"e_comprovante\": false}\n\n2. Se a imagem FOR um comprovante de pagamento:\n   - Extraia os dados com precisão.\n   - Retorne estritamente um JSON no formato abaixo, sem textos adicionais, sem markdown (como ```json) e sem explicações.\n\n3. Caso não haja ID de transação crie um ID apenas concatenando dia, hora, minuto e segundo da transação\n\n# FORMATO DE SAÍDA (JSON)\n{\n  \"e_comprovante\": true,\n  \"valor_pago\": \"string (ex: R$ 150,00)\",\n  \"banco_origem\": \"string (banco que realizou o pagamento)\",\n  \"data_hora_transacao\": \"string (formato DD/MM/AAAA HH:MM)\",\n  \"id_transacao\": \"string (ID, código de autenticação ou NSU)\",\n  \"beneficiario_nome\": \"string (quem recebeu o dinheiro)\",\n  \"beneficiario_cnpj_cpf\": \"string (apenas números ou formatado)\"\n  \"tp_transacao\":string(ex: PIX, Débito, Crédito, TED)\n}\n\n# INSTRUÇÕES ADICIONAIS\n- Mantenha o padrão de nomes das chaves acima.\n- Caso não consiga ler algum campo específico, preencha o valor como \"Não identificado\".\n- Remova qualquer quebra de linha do JSON para garantir a compatibilidade com o n8n.",
+        "inputType": "binary",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -1360,
+        128
+      ],
+      "id": "2d31fa1a-5c6c-4561-9467-63435df8f81e",
+      "name": "Extrair Informações de Imagem",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "maxTries": 5,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "SUA_CREDENCIAL_GEMINI_ID",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e7361f54-f785-4039-8df4-868b02c1d147",
+              "leftValue": "={{ $('Separar Informações').item.json.beneficiario_cnpj_cpf.length }}",
+              "rightValue": 18,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -240,
+        128
+      ],
+      "id": "9f09ecf3-1ac2-46c7-9064-8cdc2f9c36b1",
+      "name": "É Pessoa Jurídica?"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=# PERSONA\nEspecialista em Enriquecimento de Dados Bancários.\n\n# TAREFA\n1. Use a busca para identificar o Nome Fantasia (Comercial) simplificado da empresa.\n2. Classifique o gasto em: Alimentação, Transporte, Moradia, Lazer, Saúde, Educação, Viagem ou Trabalho.\n3. Crie uma descrição curta no formato: \"[Categoria] no [Nome Simplificado]\".\n\n# ENTRADA\n- Nome Bruto: {{ $('Separar Informações').item.json.beneficiario_nome }}\n- Documento: {{ $('Separar Informações').item.json.beneficiario_cnpj_cpf }}\n\n# REGRAS DE SAÍDA\n- estabelecimento_simplificado: Nome curto e amigável (sem LTDA, S/A, ME).\n- categoria: Deve ser EXATAMENTE uma das opções permitidas.\n- descricao_personalizada: Frase curta unindo o gasto ao local. Ex: \"Alimentação no Zero18 Hamburgueria\" ou \"Educação na Udemy\".\n\n# FORMATO DE RESPOSTA (JSON)\n{\n  \"estabelecimento_simplificado\": \"Texto\",\n  \"categoria\": \"Texto\",\n  \"descricao_personalizada\": \"Texto\",\n  \"ramo_atuacao\": \"Texto\"\n}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -16,
+        0
+      ],
+      "id": "c5d8dde4-0b29-426c-8291-d1ecb6fd35e4",
+      "name": "Carregar Dados de Pessoa Jurídica",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "maxTries": 5,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "SUA_CREDENCIAL_GEMINI_ID",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Procurar Documento').item.json.id }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Extrato Automatizado",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Id Transação": "={{ $('Separar Informações').item.json.id_transacao }}",
+            "Data": "={{ $('Separar Informações').item.json.data_hora_transacao }}",
+            "Tipo Saida": "={{ $json.categoria_final }}",
+            "Descrição": "={{ $('Pegar Nome Oficial').item.json.descricao_personalizada }}",
+            "Banco": "={{ $('Separar Informações').item.json.banco_origem }}",
+            "Para": "={{ $('Pegar Nome Oficial').item.json.estabelecimento_simplificado }}",
+            "Valor (R$)": "={{ $('Separar Informações').item.json.valor_pago }}",
+            "Transação": "={{ $('Separar Informações').item.json.tp_transacao }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Id Transação",
+              "displayName": "Id Transação",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Data",
+              "displayName": "Data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Descrição",
+              "displayName": "Descrição",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Banco",
+              "displayName": "Banco",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Para",
+              "displayName": "Para",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Valor (R$)",
+              "displayName": "Valor (R$)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Transação",
+              "displayName": "Transação",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Tipo Saida",
+              "displayName": "Tipo Saida",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        784,
+        0
+      ],
+      "id": "d2799e64-9e46-4498-b101-34afda46ab7f",
+      "name": "Adicionar Registro_PJ",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "SUA_CREDENCIAL_GOOGLE_SHEETS_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "let mes_s = $input.first().json.data_hora_transacao.slice(3,5);\nlet mes = parseInt(mes_s);\nlet nome_arq = '';\n\nswitch (mes) {\n  case 1:  nome_arq = '2026_Janeiro'; break;\n  case 2:  nome_arq = '2026_Fevereiro'; break;\n  case 3:  nome_arq = '2026_Marco'; break;\n  case 4:  nome_arq = '2026_Abril'; break;\n  case 5:  nome_arq = '2026_Maio'; break;\n  case 6:  nome_arq = '2026_Junho'; break;\n  case 7:  nome_arq = '2026_Julho'; break;\n  case 8:  nome_arq = '2026_Agosto'; break;\n  case 9:  nome_arq = '2026_Setembro'; break;\n  case 10: nome_arq = '2026_Outubro'; break;\n  case 11: nome_arq = '2026_Novembro'; break;\n  case 12: nome_arq = '2026_Dezembro'; break;\n  default:\n    nome_arq = 'Mes_Invalido';\n    break;\n}\n\nreturn { nome_arquivo: nome_arq };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -912,
+        128
+      ],
+      "id": "27ab6137-c560-42d2-be2d-d44e6b874817",
+      "name": "Selecionar Documento"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5dfc9440-da68-4fa5-94cd-ae8b927c99c5",
+              "leftValue": "={{ $('Separar Informações').item.json.e_comprovante }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -464,
+        128
+      ],
+      "id": "b731eef5-ed89-4572-9233-e4c485d5bcd8",
+      "name": "É Comprovante?"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "queryString": "={{ $json.nome_arquivo }}",
+        "filter": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -688,
+        128
+      ],
+      "id": "eebbca01-6510-4bfd-b44b-624e38a60e42",
+      "name": "Procurar Documento",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "SUA_CREDENCIAL_GOOGLE_DRIVE_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Procurar Documento').item.json.id }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Extrato Automatizado",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Id Transação": "={{ $('Separar Informações').item.json.id_transacao }}",
+            "Data": "={{ $('Separar Informações').item.json.data_hora_transacao }}",
+            "Banco": "={{ $('Separar Informações').item.json.banco_origem }}",
+            "Para": "={{ $('Separar Informações').item.json.beneficiario_nome }}",
+            "Descrição": "={{ $('Webhook').item.json.body.descricao }}",
+            "Valor (R$)": "={{ $('Separar Informações').item.json.valor_pago }}",
+            "Transação": "={{ $('Separar Informações').item.json.tp_transacao }}",
+            "Tipo Saida": "={{ $json.desc }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Id Transação",
+              "displayName": "Id Transação",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Data",
+              "displayName": "Data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Descrição",
+              "displayName": "Descrição",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Banco",
+              "displayName": "Banco",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Para",
+              "displayName": "Para",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Valor (R$)",
+              "displayName": "Valor (R$)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Transação",
+              "displayName": "Transação",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tipo Saida",
+              "displayName": "Tipo Saida",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        784,
+        256
+      ],
+      "id": "592e92c1-1bfe-4a05-a1de-f91f9aa5bf56",
+      "name": "Adicionar Registro PF",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "SUA_CREDENCIAL_GOOGLE_SHEETS_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Send Text",
+        "session": "=default",
+        "chatId": "=5518998101534@c.us",
+        "text": "=Registro Salvo boy\nInformações:\n- Data: {{ $json.Data }}\n- Destino: {{ $json.Para }}\n- Banco Origem: {{ $json.Banco }}\n- Valor: {{ $json['Valor (R$)'] }}\n- Descrição: {{ $json['Descrição'] }}\n- Transação: {{ $json['Transação'] }}\n- Categoria: {{ $json['Tipo Saida'] }}\n",
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-waha.WAHA",
+      "typeVersion": 202411,
+      "position": [
+        1008,
+        128
+      ],
+      "id": "3d994f9f-1b4a-4ea3-860c-6a0147287845",
+      "name": "Send a text message",
+      "retryOnFail": true,
+      "credentials": {
+        "wahaApi": {
+          "id": "SUA_CREDENCIAL_WAHA_ID",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json.categoria; \nlet desc = '';\n\nswitch (input) {\n  case 'Alimentação':  desc = '🍔 Alimentação'; break;\n  case 'Transporte':   desc = '🚌 Transporte'; break;\n  case 'Moradia':      desc = '🏠 Moradia'; break;\n  case 'Lazer':        desc = '🎉 Lazer'; break;\n  case 'Saúde':        desc = '🩺 Saúde'; break;\n  case 'Educação':     desc = '📚 Educação'; break;\n  case 'Viagem':       desc = '✈️ Viagem'; break;\n  case 'Trabalho':     desc = '🖥️ Trabalho'; break;\n  default: desc = 'Outros';\n}\n\nreturn { categoria_final: desc };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        0
+      ],
+      "id": "5d869fd2-2517-45be-a30e-5f2f79be27dc",
+      "name": "Emoji"
+    },
+    {
+      "parameters": {
+        "jsCode": "let cat = $('Webhook').first().json.body.categoria\ncat = Number(cat);\nlet desc = 'cat';\nswitch (cat) {\n  case 0: desc='🍔 Alimentação'; break;\n  case 1: desc='🚌 Transporte'; break;\n  case 2: desc='🏠 Moradia'; break;\n  case 3: desc='🎉 Lazer'; break;\n  case 4: desc='🩺 Saúde'; break;\n  case 5: desc='📚 Educação'; break;\n  case 6: desc='✈️Viagem'; break;\n  case 7: desc='🖥️Trabalho'; break;\n  default: desc = ''; break;\n};\n\nreturn {\n  desc: desc\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        576,
+        256
+      ],
+      "id": "16ec8471-a918-4523-bed5-e904194c2ee1",
+      "name": "Emoji PF"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Refatorar imagem base64",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Extrair Informações de Imagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Refatorar imagem base64": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Separar Informações": {
+      "main": [
+        [
+          {
+            "node": "Selecionar Documento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pegar Nome Oficial": {
+      "main": [
+        [
+          {
+            "node": "Emoji",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SerpAPI": {
+      "ai_tool": [
+        [
+          {
+            "node": "Carregar Dados de Pessoa Jurídica",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extrair Informações de Imagem": {
+      "main": [
+        [
+          {
+            "node": "Separar Informações",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "É Pessoa Jurídica?": {
+      "main": [
+        [
+          {
+            "node": "Carregar Dados de Pessoa Jurídica",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Emoji PF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Carregar Dados de Pessoa Jurídica": {
+      "main": [
+        [
+          {
+            "node": "Pegar Nome Oficial",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Selecionar Documento": {
+      "main": [
+        [
+          {
+            "node": "Procurar Documento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "É Comprovante?": {
+      "main": [
+        [
+          {
+            "node": "É Pessoa Jurídica?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Procurar Documento": {
+      "main": [
+        [
+          {
+            "node": "É Comprovante?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Adicionar Registro PF": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Adicionar Registro_PJ": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Emoji": {
+      "main": [
+        [
+          {
+            "node": "Adicionar Registro_PJ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Emoji PF": {
+      "main": [
+        [
+          {
+            "node": "Adicionar Registro PF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "41acf2a8-bed4-423e-ba51-fb2c66a13fad",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "14e58b5695e76b58bfd3d136e10b9053e7ef7e6ce9b5bd1eeb5a9c05396a1a25"
+  },
+  "id": "vQ9NqUkrssHWGL4L",
+  "tags": []
+}

@@ -1,0 +1,1517 @@
+{
+  "name": "Automacao YT Shorts",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -208,
+        -128
+      ],
+      "id": "d3f7e88c-c5fb-4f62-9212-031788862e1d",
+      "name": "Horário"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8181224b-c85a-401c-941f-1a4d711fe5fb",
+              "name": "chatInput",
+              "value": "={{ Math.floor(Math.random() * 4) + 1 }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        16,
+        -128
+      ],
+      "id": "aa6d8edc-325e-4240-bdd9-d49233cd9140",
+      "name": "Aletório"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -208,
+        0
+      ],
+      "id": "f4b835f6-0ce7-47a1-abee-6a05169f76b4",
+      "name": "When chat message received",
+      "webhookId": "7b29949d-81d3-4246-8f90-aae80ff6292f"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1e708a18-0a33-4593-8290-95e44f704d16",
+              "name": "chatInput",
+              "value": "={{ $json.chatInput }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "04fe58f4-2326-4234-a393-aefa8b9d65e6",
+      "name": "Converter"
+    },
+    {
+      "parameters": {
+        "jsCode": "let categoria = \"\"\nswitch ($input.first().json.chatInput)\n{\n  case 1: categoria = \"Fábula\"; break;\n  case 2: categoria = \"Curiosidades\"; break;\n  case 3: categoria = \"Salada\"; break;\n  case 4: categoria = \"Sobremesa\"; break;\n  default: categoria = \"poha nenhuma\"; break;\n}\nreturn {categoria}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "2609f261-b095-4dbd-ba25-e03a6d66e13b",
+      "name": "Categoria"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Você é um roteirista especialista em vídeos curtos (YouTube Shorts / Reels / TikTok) de storytelling, com foco absoluto em retenção e engajamento.\n\nTAREFA:\nGere uma ideia de vídeo curto (narrado, com legendas automáticas, sobre um vídeo de fundo \"satisfatório\" - ex: slime, parkour, minecraft, cortando sabão, etc). O tema/categoria do vídeo é: \"{{ $json.categoria }}\"\n\nREGRAS DE ROTEIRO:\n1. Duração máxima da narração: 1 minuto e 30 segundos (aproximadamente 220-260 palavras faladas, considerando ritmo natural de fala).\n2. Os primeiros 3 segundos precisam ser um GANCHO extremamente forte: uma pergunta intrigante, uma afirmação chocante, ou um \"e se\" que gere curiosidade imediata. A pessoa não pode ter vontade de dar skip.\n3. Use a técnica de \"loop aberto\": crie uma pergunta ou tensão logo no início que só será respondida perto do final, para prender a atenção até o fim.\n4. A história deve ter uma estrutura clara: Gancho → Contexto rápido → Desenvolvimento com tensão crescente → Reviravolta ou revelação → Conclusão satisfatória/impactante (moral, fato surpreendente ou virada emocional).\n5. Frases curtas e diretas, linguagem simples e envolvente (o público ouve enquanto assiste a um vídeo de fundo, então a narração precisa ser 100% compreensível sem esforço).\n6. Evite introduções genéricas (\"Hoje vou contar...\", \"Vamos falar sobre...\"). Vá direto ao gancho.\n7. Termine com um fechamento forte (reflexão, call-back ao gancho inicial, ou frase de efeito) que incentive o espectador a comentar ou assistir de novo.\n8. Não inclua indicações técnicas de cena, câmera ou efeitos — apenas o texto que será narrado.\n\nFORMATO DE SAÍDA:\nResponda APENAS com um JSON válido, sem markdown, sem texto antes ou depois, seguindo exatamente esta estrutura:\n\n{\n  \"ideia_geral\": \"Roteiro completo da narração, pronto para virar áudio, respeitando o limite de 1min30s.\",\n  \"ideia_resumida\": \"Resumo curto da ideia em 1-2 frases, para identificar o vídeo no banco de dados (ex: título/tema interno).\"\n}\n\nNão adicione comentários, explicações ou texto fora do JSON."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        608,
+        0
+      ],
+      "id": "d2088a12-1f58-4207-99fe-5ceb30c11467",
+      "name": "Gerar ideia",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "SUA_CREDENCIAL_GEMINI_ID",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Você é um Diretor de Voz e Engenheiro de Prompt especializado em Text-to-Speech expressivo, com domínio completo do modelo gemini-3.1-flash-tts-preview e seu sistema de controle por tags semânticas (não SSML tradicional), além de domínio técnico da estrutura de payload JSON da API do Gemini.\n\nATENÇÃO TÉCNICA IMPORTANTE:\nO modelo gemini-2.5-flash-preview-tts NÃO aceita o campo \"systemInstruction\" no payload (retorna erro 400 \"Developer instruction is not enabled for this model\"). Toda instrução de tom, ritmo e personalidade de voz deve ser embutida DENTRO do próprio texto em \"contents\", como se fosse um roteiro de cena para um dublador ler — não existe campo de sistema separado para este modelo.\n\nSUA TAREFA (em duas fases):\nFASE 1 — Transformar a história abaixo em um script de áudio com tags expressivas, calibrado para durar ~1min10s.\nFASE 2 — Empacotar esse script final dentro do JSON pronto para envio à API, incluindo a direção de voz embutida no próprio texto (não em systemInstruction) e configs de voz.\n\n============================================\nFASE 1 — ROTEIRIZAÇÃO COM TAGS\n============================================\n\nREGRA DE DURAÇÃO (CRÍTICA):\n- O áudio final deve durar aproximadamente 70 segundos (1min10s), aceitável entre 65s e 75s.\n- Cadência média de narração em português: ~2,5 a 3 palavras por segundo em ritmo [normal].\n- Isso equivale a ~170 a 200 palavras de texto puro (tags não contam como narração).\n- Se faltar conteúdo, expanda com pausas dramáticas ([sighs], reticências, respiração), nunca com enchimento de conteúdo.\n- Se sobrar conteúdo, use [fast] em trechos de menor peso dramático para compensar tempo.\n- Mostre o cálculo: nº de palavras ÷ velocidade média = segundos estimados.\n\nTAGS DISPONÍVEIS (use somente estas, entre colchetes, no meio do texto):\nEmoção: [excited] [happy] [sad] [angry] [fearful]\nFisiológico/Pausa: [whispers]/[whispering] [sighs] [laughs]/[chuckles] [gasp] [clears throat] [cough]\nRitmo: [slow]/[slowly] [fast]/[quickly] [normal]/[regular]\n\nDIRETRIZES DE APLICAÇÃO:\n1. Gancho inicial (3-5s): tag de emoção forte ([fearful], [excited] ou [angry], conforme o tom) para prender atenção na voz desde a primeira frase.\n2. Máximo 1 tag a cada 8-12 palavras — excesso soa robótico e quebra naturalidade.\n3. [whispers] só em momento de tensão máxima/segredo revelado — no máximo 1x no roteiro inteiro.\n4. [gasp]/[sighs] imediatamente antes/depois de uma virada, nunca em frase neutra.\n5. Alterne [slow] em suspense/reflexão e [fast] em ação/urgência para gerar contraste rítmico.\n6. Últimos 5-8s: tag de emoção que reforce o gancho de saída ([fearful] = suspense, [sad] = impacto emocional, [excited] = engajamento/CTA).\n7. Nunca empilhe tags consecutivas na mesma oração — escolha a mais relevante por trecho.\n8. Separe cláusulas com tags usando VÍRGULA, não ponto final, sempre que a tag estiver no meio de uma frase contínua (ex: \"...o resultado é o mel louco, [slow] em pequenas doses ele cura\" em vez de terminar a frase com ponto antes da tag). Frases cortadas por ponto soam mais robóticas e picotadas.\n\n============================================\nFASE 2 — MONTAGEM DO TEXTO DE DIREÇÃO + PAYLOAD JSON\n============================================\n\nAntes do script narrado dentro de \"contents\", escreva um breve bloco de direção em TEXTO CORRIDO, SEM COLCHETES (os colchetes são reservados exclusivamente para as tags da Fase 1). Contendo:\n- Perfil de Áudio: quem é essa voz.\n- Cena: ambiente/vibe geral.\n- Notas de Direção: estilo, pace e sotaque.\n\nREGRA CRÍTICA DE DELIMITADOR (evita erro 500):\nEntre o bloco de direção e o script narrado, é OBRIGATÓRIO inserir o marcador exato \"#### TRANSCRIPT\" em uma linha separada. Sem esse marcador, o modelo pode confundir instrução de cena com fala real e tentar narrar as próprias diretrizes, o que causa falha interna no servidor (erro 500 - \"Internal error encountered\"). Este marcador NUNCA deve ser removido, alterado ou traduzido.\n\nFormato correto (exemplo):\n\"Perfil de Áudio: voz masculina grave, madura, tom contido de narrador de thriller psicológico. Cena: narração intimista e tensa, como se contasse um segredo sombrio à meia-luz. Notas de Direção: cadência lenta, pronúncia clara, aumentando a intensidade nos momentos de revelação.\n#### TRANSCRIPT\n[SCRIPT COM TAGS AQUI]\"\n\nNUNCA envolva o bloco de direção inteiro entre colchetes — isso pode ser confundido pelo parser de tags do modelo.\n\nEsse bloco de direção deve vir ANTES do script com tags, na mesma string de \"text\", separados pelo marcador \"#### TRANSCRIPT\" — tudo dentro de \"contents\", nunca em um campo systemInstruction.\n\nMonte o JSON final seguindo esta estrutura EXATA (sem o campo systemInstruction).\nOnde estiver escrito <VOICE_NAME>, substitua por APENAS UMA palavra da lista de vozes — nunca inclua explicações, frases ou aspas extras ali dentro.\n\n{\n  \"model\": \"gemini-2.5-flash-preview-tts\",\n  \"contents\": [\n    {\n      \"role\": \"user\",\n      \"parts\": [\n        {\n          \"text\": \"[BLOCO DE DIREÇÃO]\\n#### TRANSCRIPT\\n[SCRIPT FINAL COM TAGS]\"\n        }\n      ]\n    }\n  ],\n  \"generationConfig\": {\n    \"responseModalities\": [\"AUDIO\"],\n    \"speechConfig\": {\n      \"voiceConfig\": {\n        \"prebuiltVoiceConfig\": {\n          \"voiceName\": \"<VOICE_NAME>\"\n        }\n      }\n    },\n   \"maxOutputTokens\":4096\n  }\n}\n\nLISTA DE VOZES VÁLIDAS (escolha exatamente uma, sem alterar grafia):\nZephyr, Puck, Charon, Kore, Fenrir, Leda, Orus, Aoede, Callirrhoe, Autonoe,\nEnceladus, Iapetus, Umbriel, Algieba, Despina, Erinome, Algenib, Rasalgethi,\nLaomedeia, Achernar, Alnilam, Schedar, Gacrux, Pulcherrima, Achird,\nZubenelgenubi, Vindemiatrix, Sadachbia, Sadaltager, Sulafat\n\nREGRA DE ESCAPE (crítica para JSON válido):\n- Qualquer aspas duplas (\") dentro do texto narrado deve virar \\\" .\n- Não use quebras de linha reais dentro do valor de \"text\" no JSON final — use \\n escapado (como no exemplo de estrutura acima).\n- Não invente novas tags além das listadas na Fase 1 (nunca escreva \"[whispers: algo]\", só \"[whispers]\").\n- Nunca coloque texto explicativo, aspas soltas ou frases descritivas dentro do campo \"voiceName\" — apenas o nome exato da voz escolhida.\n\nREGRAS DA FASE 2:\n- NÃO inclua o campo \"systemInstruction\" em hipótese alguma — ele causa erro 400 neste modelo.\n- Toda a direção de tom/ritmo/personalidade deve estar embutida no início do texto em \"contents\", antes do marcador \"#### TRANSCRIPT\".\n- O script com tags gerado na Fase 1 deve vir logo após o marcador, sem alterações.\n- O JSON deve estar sintaticamente válido e pronto para copiar e colar direto no node HTTP Request do n8n.\n\n============================================\nFORMATO DE SAÍDA FINAL (JSON ÚNICO):\n============================================\nVocê deve retornar a resposta ESTRITAMENTE como um objeto JSON válido, contendo exatamente os 4 campos abaixo em CAIXA ALTA:\n\n{\n  \"SCRIPT_COM_TAGS\": \"Texto corrido do script com todas as tags de narração devidamente posicionadas.\",\n  \"CALCULO_DE_DURACAO\": \"Número de palavras ÷ velocidade = X segundos estimados (confirmando faixa de 65-75s).\",\n  \"BLOCO_DE_DIRECAO_DE_VOZ\": \"Texto consolidado de Perfil de Áudio + Cena + Notas de Direção, pronto para ser concatenado antes do marcador '#### TRANSCRIPT'.\",\n  \"JSON_PAYLOAD\": \"O JSON completo de payload pronto para automação no n8n, seguindo a estrutura solicitada (sem systemInstruction e com o marcador '#### TRANSCRIPT' incluso no corpo do texto).\"\n}\n\nREGRAS DE FORMATAÇÃO:\n1. Responda APENAS com o JSON. Não inclua blocos de explicação fora do JSON.\n2. NUNCA altere os nomes das chaves. Mantenha todas as chaves em CAIXA ALTA (\"SCRIPT_COM_TAGS\", \"CALCULO_DE_DURACAO\", \"BLOCO_DE_DIRECAO_DE_VOZ\", \"JSON_PAYLOAD\").\n3. Certifique-se de que o valor de \"JSON_PAYLOAD\" esteja devidamente formatado ou escapado como string para evitar quebras de sintaxe.\n\nHISTÓRIA A SER CONVERTIDA:\n{{ $('JSON').item.json.ideia_geral }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -272,
+        384
+      ],
+      "id": "78903c90-8c54-4cf6-8f4e-ad30c93d75a6",
+      "name": "Gerar Prompt com Plano",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "SUA_CREDENCIAL_GEMINI_ID",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "SUA_API_KEY_AQUI_USE_VARIAVEL_DE_AMBIENTE"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.Payload }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        576,
+        256
+      ],
+      "id": "da36a23a-d922-41bb-880b-c7ea0cc2b8bd",
+      "name": "Gerar Áudio com GOOGLE GEMINI",
+      "retryOnFail": false,
+      "maxTries": 5
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Captura a resposta do nó anterior usando a sintaxe recomendada do N8N\nconst responseData = $input.first().json;\n\n// 2. Navega pela estrutura do JSON para pegar o Base64 do áudio\nconst base64Audio = $('Gerar Áudio com GOOGLE GEMINI').first().json.candidates[0].content.parts[0].inlineData.data\nconst pcmBuffer = Buffer.from(base64Audio, 'base64');\n\n// 3. Configurações do áudio nativo do Gemini TTS\nconst sampleRate = 24000;\nconst numChannels = 1;\nconst bitsPerSample = 16;\n\n// 4. Cria o cabeçalho WAV de 44 bytes\nconst wavHeader = Buffer.alloc(44);\nconst blockAlign = numChannels * (bitsPerSample / 8);\nconst byteRate = sampleRate * blockAlign;\nconst dataLength = pcmBuffer.length;\n\nwavHeader.write('RIFF', 0);                          // ChunkID\nwavHeader.writeUInt32LE(36 + dataLength, 4);         // ChunkSize\nwavHeader.write('WAVE', 8);                          // Format\nwavHeader.write('fmt ', 12);                         // Subchunk1ID\nwavHeader.writeUInt32LE(16, 16);                     // Subchunk1Size (16 para PCM)\nwavHeader.writeUInt16LE(1, 20);                      // AudioFormat (1 para PCM não comprimido)\nwavHeader.writeUInt16LE(numChannels, 22);            // NumChannels\nwavHeader.writeUInt32LE(sampleRate, 24);             // SampleRate\nwavHeader.writeUInt32LE(byteRate, 28);               // ByteRate\nwavHeader.writeUInt16LE(blockAlign, 32);             // BlockAlign\nwavHeader.writeUInt16LE(bitsPerSample, 34);          // BitsPerSample\nwavHeader.write('data', 36);                         // Subchunk2ID\nwavHeader.writeUInt32LE(dataLength, 40);             // Subchunk2Size\n\n// 5. Junta o cabeçalho criado com os dados brutos de áudio do Gemini\nconst wavBuffer = Buffer.concat([wavHeader, pcmBuffer]);\n\n// 6. Retorna no formato binário padrão que o N8N reconhece como player de áudio\nreturn [\n  {\n    json: {\n      status: \"Sucesso\",\n      mensagem: \"Áudio WAV gerado pronto para reprodução!\"\n    },\n    binary: {\n      data: {\n        data: wavBuffer.toString('base64'),\n        mimeType: 'audio/wav',\n        fileName: 'assistente_gemini.wav'\n      }\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1056,
+        256
+      ],
+      "id": "99803f89-726e-499c-b10d-5e3cf32afc8b",
+      "name": "Converter áudio para formato Válido"
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "operation": "upload",
+        "title": "=AI ASMR : {{ $('Salvar Vídeo em PLanilha').item.json.idea }}",
+        "options": {
+          "description": "=AI-Generated Video Idea: {{ $('Salvar Vídeo em PLanilha').item.json.idea }}\n\nThis video was created automatically using our automated workflow #asmrai #asmr #n8n",
+          "notifySubscribers": true,
+          "privacyStatus": "public",
+          "tags": "=asmr, viral, asmrai, n8n, automation"
+        }
+      },
+      "id": "3363a204-b384-4b42-a3c0-4cbef2224945",
+      "name": "Upload no Youtube",
+      "type": "n8n-nodes-base.youTube",
+      "position": [
+        2512,
+        224
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list",
+          "cachedResultName": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "historico_videos",
+          "mode": "list",
+          "cachedResultName": "historico_videos"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "hv_id": 0
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "hv_id",
+              "displayName": "hv_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "hv_ideia",
+              "displayName": "hv_ideia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "hv_roteiro",
+              "displayName": "hv_roteiro",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "hv_caminho_audio",
+              "displayName": "hv_caminho_audio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "hv_url",
+              "displayName": "hv_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "hv_status",
+              "displayName": "hv_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "hv_data_criacao",
+              "displayName": "hv_data_criacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "hv_data_atualizacao",
+              "displayName": "hv_data_atualizacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2880,
+        224
+      ],
+      "id": "58da1c33-5471-4b6d-ba63-87ab969ab08f",
+      "name": "Salvar link na tabela do Banco",
+      "credentials": {
+        "postgres": {
+          "id": "SUA_CREDENCIAL_POSTGRES_ID",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list",
+          "cachedResultName": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "historico_videos",
+          "mode": "list",
+          "cachedResultName": "historico_videos"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "hv_ideia": "={{ $json.ideia_resumida }}",
+            "hv_status": "Iniciado"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "hv_id",
+              "displayName": "hv_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "hv_ideia",
+              "displayName": "hv_ideia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "hv_roteiro",
+              "displayName": "hv_roteiro",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "hv_caminho_audio",
+              "displayName": "hv_caminho_audio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "hv_url",
+              "displayName": "hv_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "hv_status",
+              "displayName": "hv_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "hv_data_criacao",
+              "displayName": "hv_data_criacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "hv_data_atualizacao",
+              "displayName": "hv_data_atualizacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1120,
+        0
+      ],
+      "id": "9f2e0172-2314-44b6-8433-2e406111f079",
+      "name": "Inserir Ideia e Infos na Tabela",
+      "credentials": {
+        "postgres": {
+          "id": "SUA_CREDENCIAL_POSTGRES_ID",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "=\n {{ $json.content.parts[0].text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        16,
+        256
+      ],
+      "id": "c54bbb18-7384-4f6d-8877-54f16dae3f04",
+      "name": "Colocar em JSOn"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "13eb3b06-27bc-4624-ad25-ea31276b4137",
+              "name": "Payload",
+              "value": "={{ $('Colocar em JSOn').item.json.JSON_PAYLOAD }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        368,
+        256
+      ],
+      "id": "e8628d21-c1eb-4b9d-b315-ed1894ad7fa1",
+      "name": "Converter para Texto"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list",
+          "cachedResultName": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "template_videos",
+          "mode": "list",
+          "cachedResultName": "template_videos"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "cat_id",
+              "value": "1"
+            }
+          ]
+        },
+        "combineConditions": "=AND",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        624,
+        496
+      ],
+      "id": "8a8c8628-9688-4635-bf1c-1903bc0104e7",
+      "name": "Pegar IDs",
+      "credentials": {
+        "postgres": {
+          "id": "SUA_CREDENCIAL_POSTGRES_ID",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Pega todos os itens que entraram no nó\nconst todosOsItens = $input.all();\nconst totalTemplates = todosOsItens.length; \n\nlet tempoAcumulado = 0;\nlet indicesSorteados = [];\nlet videosSorteados = [];\nconst alvoSegundos = 60;\n\nwhile (indicesSorteados.length < totalTemplates && tempoAcumulado < $('Tamanho').first().json.duracaoEmSegundos) {\n  const indiceAleatorio = Math.floor(Math.random() * totalTemplates);\n  \n  if (indicesSorteados.indexOf(indiceAleatorio) === -1) {\n    const itemEstrategico = todosOsItens[indiceAleatorio].json;\n    const duracaoVideo = itemEstrategico.tv_duracao; // \n    tempoAcumulado += duracaoVideo;\n    indicesSorteados.push(indiceAleatorio);\n    videosSorteados.push(itemEstrategico);    \n  }  \n}\n\nreturn [\n  {\n    json: {\n      status: \"Sucesso\",\n      tempoTotalGerado: tempoAcumulado,\n      quantidadeClipes: videosSorteados.length,\n      videos: videosSorteados\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        848,
+        496
+      ],
+      "id": "0e409e43-a041-43ad-9ada-884b082530f7",
+      "name": "Selecionar Videos"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $json.content.parts[0].text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        928,
+        0
+      ],
+      "id": "18984303-d7c9-417f-a825-31da4f7470ff",
+      "name": "JSON"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list",
+          "cachedResultName": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "historico_videos",
+          "mode": "list",
+          "cachedResultName": "historico_videos"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "hv_id": "={{ $('Inserir Ideia e Infos na Tabela').item.json.hv_id }}",
+            "hv_roteiro": "={{ $json.SCRIPT_COM_TAGS }}",
+            "hv_status": "Roteiro Gerado"
+          },
+          "matchingColumns": [
+            "hv_id"
+          ],
+          "schema": [
+            {
+              "id": "hv_id",
+              "displayName": "hv_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "hv_ideia",
+              "displayName": "hv_ideia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "hv_roteiro",
+              "displayName": "hv_roteiro",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "hv_caminho_audio",
+              "displayName": "hv_caminho_audio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "hv_url",
+              "displayName": "hv_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "hv_status",
+              "displayName": "hv_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "hv_data_criacao",
+              "displayName": "hv_data_criacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "hv_data_atualizacao",
+              "displayName": "hv_data_atualizacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        192,
+        256
+      ],
+      "id": "ad3955cb-edd5-4124-b6ee-a57948f2d3c4",
+      "name": "Atualizar Registro",
+      "credentials": {
+        "postgres": {
+          "id": "SUA_CREDENCIAL_POSTGRES_ID",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.tv_drive_id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1216,
+        912
+      ],
+      "id": "db7d43bf-617c-4e04-ad70-57076397f16d",
+      "name": "Baixar Videos",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "SUA_CREDENCIAL_GOOGLE_DRIVE_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "=videos",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        880,
+        752
+      ],
+      "id": "0b087c69-3e47-4eac-97f7-edfee922d309",
+      "name": "Separar Itens"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "data"
+            }
+          ]
+        },
+        "options": {
+          "includeBinaries": true
+        }
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1296,
+        736
+      ],
+      "id": "ba88ea99-5cba-4012-9474-91a4a5fab3e2",
+      "name": "Criar array de Videos"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1760,
+        528
+      ],
+      "id": "53a78c88-5282-40f7-bccc-ec7a8842dabc",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "const itens = $input.all();\n\n// Pega o binário do primeiro item (áudio) e do segundo item (vídeo)\nreturn [{\n  json: { status: \"preparado\" },\n  binary: {\n    audio: itens[0].binary.data,\n    clipes: itens[1].binary.data\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        528
+      ],
+      "id": "5c993c07-35da-42b7-be92-c539368cc8da",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "historico_videos",
+          "mode": "list",
+          "cachedResultName": "historico_videos"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "hv_id": "={{ $('Inserir Ideia e Infos na Tabela').first().json.hv_id }}",
+            "hv_data_atualizacao": "={{ $now }}",
+            "hv_status": "Video Gerado",
+            "hv_video_id": "={{ $('Upload Video Completo').item.json.id }}",
+            "hv_video_caminho": "=Videos Prontos/{{ $('Upload Video Completo').item.json.name }}",
+            "hv_audio_id": "={{ $('Upload Audio').first().json.id }}",
+            "hv_caminho_audio": "=Audio/{{ $('Upload Audio').first().json.name }}"
+          },
+          "matchingColumns": [
+            "hv_id"
+          ],
+          "schema": [
+            {
+              "id": "hv_id",
+              "displayName": "hv_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "hv_ideia",
+              "displayName": "hv_ideia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "hv_roteiro",
+              "displayName": "hv_roteiro",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "hv_caminho_audio",
+              "displayName": "hv_caminho_audio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "hv_url",
+              "displayName": "hv_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "hv_status",
+              "displayName": "hv_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "hv_data_criacao",
+              "displayName": "hv_data_criacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "hv_data_atualizacao",
+              "displayName": "hv_data_atualizacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "hv_audio_id",
+              "displayName": "hv_audio_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "hv_video_caminho",
+              "displayName": "hv_video_caminho",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "hv_video_id",
+              "displayName": "hv_video_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2976,
+        608
+      ],
+      "id": "5e8befb4-8c92-47ef-95f7-6d55b97c5903",
+      "name": "Update rows in a table",
+      "credentials": {
+        "postgres": {
+          "id": "SUA_CREDENCIAL_POSTGRES_ID",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "=Video_{{ $('Inserir Ideia e Infos na Tabela').first().json.hv_id }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "SEU_GOOGLE_DRIVE_FOLDER_ID",
+          "mode": "list",
+          "cachedResultName": "Videos Prontos",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/SEU_GOOGLE_DRIVE_FOLDER_ID"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2512,
+        464
+      ],
+      "id": "fa966969-1e55-4f64-8da8-6ff11dcb028d",
+      "name": "Upload Video Completo",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "SUA_CREDENCIAL_GOOGLE_DRIVE_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "audio",
+        "name": "=Audio_{{ $('Inserir Ideia e Infos na Tabela').first().json.hv_id }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "SEU_GOOGLE_SHEETS_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Audio",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/SEU_GOOGLE_SHEETS_SPREADSHEET_ID"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2336,
+        704
+      ],
+      "id": "12d0053c-7787-4e36-9488-dcc18db81017",
+      "name": "Upload Audio",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "SUA_CREDENCIAL_GOOGLE_DRIVE_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2736,
+        608
+      ],
+      "id": "c45a7c8a-bbf7-4f92-b3f6-a7f84a5ea737",
+      "name": "Merge para Salvar"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/gerar-short",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "audio",
+              "inputDataFieldName": "audio"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "clipes",
+              "inputDataFieldName": "clipes"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2160,
+        464
+      ],
+      "id": "ef4843d2-131b-4ff2-8160-e55ff7b013a1",
+      "name": "Unificar"
+    },
+    {
+      "parameters": {
+        "jsCode": "const base64Data = $json.candidates[0].content.parts[0].inlineData.data;\n\nconst totalBytes = Buffer.from(base64Data, 'base64').length;\n\nconst bytesPorSegundo = 24000 * 2 * 1; \n\n// Duração exata em segundos\nconst duracaoEmSegundos = totalBytes / bytesPorSegundo;\n\nreturn {\n  totalBytes,\n  duracaoEmSegundos: Number(duracaoEmSegundos.toFixed(2)) // Ex: 12.45 segundos\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        432,
+        496
+      ],
+      "id": "a4590118-2e55-4162-81a7-2dd4ca1dd830",
+      "name": "Tamanho"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1056,
+        752
+      ],
+      "id": "9e8db9a1-7132-4146-9c36-bb2e018c1c41",
+      "name": "Pegar videos ate bater tamanho"
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:8000/download/{{ $json.video }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2336,
+        464
+      ],
+      "id": "681db01b-6f26-40fa-ae58-dc30e8278e41",
+      "name": "Baixar video"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list",
+          "cachedResultName": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "historico_videos_templates",
+          "mode": "list",
+          "cachedResultName": "historico_videos_templates"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "hv_id": "={{ $('Inserir Ideia e Infos na Tabela').item.json.hv_id }}",
+            "tv_id": "={{ $json.tv_id }}",
+            "qtd": 1
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "hv_id",
+              "displayName": "hv_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "tv_id",
+              "displayName": "tv_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "qtd",
+              "displayName": "qtd",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1424,
+        912
+      ],
+      "id": "8d2529b4-7453-4af4-a2a4-a69c89d4bb2d",
+      "name": "Insert rows in a table",
+      "credentials": {
+        "postgres": {
+          "id": "SUA_CREDENCIAL_POSTGRES_ID",
+          "name": "Postgres account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Horário": {
+      "main": [
+        [
+          {
+            "node": "Aletório",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Converter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aletório": {
+      "main": [
+        [
+          {
+            "node": "Converter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Converter": {
+      "main": [
+        [
+          {
+            "node": "Categoria",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Categoria": {
+      "main": [
+        [
+          {
+            "node": "Gerar ideia",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gerar ideia": {
+      "main": [
+        [
+          {
+            "node": "JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gerar Prompt com Plano": {
+      "main": [
+        [
+          {
+            "node": "Colocar em JSOn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gerar Áudio com GOOGLE GEMINI": {
+      "main": [
+        [
+          {
+            "node": "Converter áudio para formato Válido",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Tamanho",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Converter áudio para formato Válido": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload no Youtube": {
+      "main": [
+        [
+          {
+            "node": "Salvar link na tabela do Banco",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inserir Ideia e Infos na Tabela": {
+      "main": [
+        [
+          {
+            "node": "Gerar Prompt com Plano",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Colocar em JSOn": {
+      "main": [
+        [
+          {
+            "node": "Atualizar Registro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Converter para Texto": {
+      "main": [
+        [
+          {
+            "node": "Gerar Áudio com GOOGLE GEMINI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pegar IDs": {
+      "main": [
+        [
+          {
+            "node": "Selecionar Videos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Selecionar Videos": {
+      "main": [
+        [
+          {
+            "node": "Separar Itens",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JSON": {
+      "main": [
+        [
+          {
+            "node": "Inserir Ideia e Infos na Tabela",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Baixar Videos": {
+      "main": [
+        [
+          {
+            "node": "Insert rows in a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Separar Itens": {
+      "main": [
+        [
+          {
+            "node": "Pegar videos ate bater tamanho",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Criar array de Videos": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Unificar",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Upload Audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar Registro": {
+      "main": [
+        [
+          {
+            "node": "Converter para Texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update rows in a table": {
+      "main": [
+        []
+      ]
+    },
+    "Upload Video Completo": {
+      "main": [
+        [
+          {
+            "node": "Merge para Salvar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Audio": {
+      "main": [
+        [
+          {
+            "node": "Merge para Salvar",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge para Salvar": {
+      "main": [
+        [
+          {
+            "node": "Update rows in a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Unificar": {
+      "main": [
+        [
+          {
+            "node": "Baixar video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tamanho": {
+      "main": [
+        [
+          {
+            "node": "Pegar IDs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pegar videos ate bater tamanho": {
+      "main": [
+        [
+          {
+            "node": "Criar array de Videos",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Baixar Videos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Baixar video": {
+      "main": [
+        [
+          {
+            "node": "Upload Video Completo",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Upload no Youtube",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert rows in a table": {
+      "main": [
+        [
+          {
+            "node": "Pegar videos ate bater tamanho",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "3c1a126f-d48a-41ec-af5b-2254478e0b19",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "14e58b5695e76b58bfd3d136e10b9053e7ef7e6ce9b5bd1eeb5a9c05396a1a25"
+  },
+  "id": "Vy0Amd9ljvADHawU",
+  "tags": []
+}
